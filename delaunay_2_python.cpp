@@ -135,6 +135,13 @@ struct Point_from_python_list {
   }    
 };
 
+struct ErrorTuple_to_python {
+  static PyObject* convert(ErrorTuple const &arg) {
+    bpl::tuple result = bpl::make_tuple(arg.m_err, arg.m_f, arg.m_x);
+    return boost::python::incref(result.ptr());
+  }
+};
+
 BOOST_PYTHON_MODULE(_delaunay_interp2)
 {   
   bpl::converter::registry::push_back(&Point_from_python_list<2>::check, &Point_from_python_list<2>::construct, bpl::type_id<Point >());

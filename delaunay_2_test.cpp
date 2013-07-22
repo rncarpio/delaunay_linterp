@@ -12,71 +12,49 @@ dVec linspace(double first, double last, int len) {
   return result;
 }
 
+template <int N>
+class CobbDouglas {
+public:
+  array<double,N> m_alphas;
+
+  template <class IterT>
+  CobbDouglas(IterT alpha_begin, IterT alpha_end) {
+    assert(alpha_end - alpha_begin == N);
+    std::copy(alpha_begin, alpha_end, m_alphas.begin());
+  }
+  template <class IterT>
+  double operator() (IterT args_begin) const {
+    double result = 1.0;
+    for (int i=0; i<N; i++) {
+      result *= (pow(args_begin[i], m_alphas[i]));
+    }
+    return result;
+  }
+};
 
 int main(int argc, char **argv) {
-  //printf("press return to continue\n");
-  //char pcTemp[1024];
-  //fgets(pcTemp, 1024, stdin);
-  
-  int f_len = 30;
-  int p_len = 40;
-  dVec f_grid1 = linspace(-5, 5, f_len);
-  dVec p_grid1 = linspace(-8, 8, p_len);
-  
-  vector<dVec> f_gridList(N);
-  for (int i=0; i<N; i++) {
-    f_gridList[i] = f_grid1;
-  }
-  
-  array<int,N> f_sizes, p_sizes;
-  for (int i=0; i<N; i++) {
-    f_sizes[i] = f_len;
-	p_sizes[i] = p_len;
-  }
-  boost::multi_array<double,N> f(f_sizes);
-  array<int,N> index;
-  array<double,N> arg;
-  for (int i=0; i<f_sizes[0]; i++) {
-    for (int j=0; j<f_sizes[1]; j++) {
-	  for (int k=0; k<f_sizes[2]; k++) {
-	    for (int l=0; l<f_sizes[3]; l++) {
-          index[0] = i;
-		  index[1] = j;
-		  index[2] = k;
-		  index[3] = l;		  
-		  arg = get_grid_point(f_gridList, index);  
-		  f(index) = nd_circle_sine(arg.begin(), arg.end());
-		}
-      }
-    }
-  }	
-
-  vector<dVec> p_gridList(N);
-  for (int i=0; i<N; i++) {
-    p_gridList[i] = p_grid1;
-  }
-  dVec result;
-  int total;
-  vector<dVec> p_ndgrid(N);
-  ndgrid(p_gridList.begin(), p_gridList.end(), p_ndgrid);
-  total = p_ndgrid[0].size();
-  result.resize(total);
-  printf ("interpolating %d points\n", total);
-  auto begins_ends = get_begins_ends(f_gridList.begin(), f_gridList.end());
-  
-  InterpSimplex<4, double, false> s1(begins_ends.first.begin(), f_sizes, f.data(), f.data() + f.num_elements());
-  InterpMultilinear<4, double, false> ml1(begins_ends.first.begin(), f_sizes, f.data(), f.data() + f.num_elements());
-
+  int n_points = 10;
   clock_t t1, t2;
-  t1 = clock();	
-  ml1.interp_vec(total, p_ndgrid.begin(), p_ndgrid.end(), result.begin());
-  t2 = clock();
-  printf("multilinear interp: %d clocks, %f sec\n", (t2-t1), ((double)(t2 - t1)) / CLOCKS_PER_SEC);
+  Delaunay_incremental_interp_2 triang;
+  array<double,2> alphas = {0.3, 0.6};
+  CobbDouglas<2> cd_fn(alphas.begin(), alphas.end());
+  array<double,2> args;
+  double f_val;
 
+  // use rectangular grid
+  dVec grid1 = linspace(0.01, 5, n_points);
+  dVec grid2 = linspace(0.01, 5, n_points);
   t1 = clock();	
-  s1.interp_vec(total, p_ndgrid.begin(), p_ndgrid.end(), result.begin());
+  for (int i=0; i<n_points; i++) {
+    for (int j=0; j<n_points; j++) {
+      args[0] = grid1[i];
+      args[2] = grid2[j];
+      f_val = cd_fn(args.begin());
+      triang.insert(args.begin(), f_val);
+    }
+  }
   t2 = clock();
-  printf("simplex interp: %d clocks, %f sec\n", (t2-t1), ((double)(t2 - t1)) / CLOCKS_PER_SEC);
+  printf("%d insertions, %d clocks, %f sec\n", n_points*n_points, (t2-t1), ((double)(t2 - t1)) / CLOCKS_PER_SEC);
 
   return 0;
 }

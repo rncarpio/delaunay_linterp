@@ -16,7 +16,7 @@ ifeq ($(COMPILER), gcc)
 	BOOST_INC_DIR = $(BOOST_DIR)
 	PYTHON_DIR = $(HOME)/local
 	PYTHON_INC_DIRS = $(HOME)/local/include/python2.7 $(HOME)/local/lib/python2.7/site-packages/numpy/core/include
-	CGAL_DIR = $(HOME)/CGAL-4.2
+	CGAL_DIR = $(HOME)/CGAL-4.2/include
 	EIGEN_DIR = $(HOME)/eigen
 	GMP_DIR = $(HOME)/local/include
 	MPFR_DIR = $(HOME)/local/include
@@ -129,7 +129,7 @@ endif
 ## targets
 #########################
 
-EXE_TARGETS = linterp_test
+EXE_TARGETS = delaunay_2_test
 EXE_FILES = $(foreach target, $(EXE_TARGETS), $(BUILD_DIR)/$(target)$(EXE_PREFIX))
 
 $(BUILD_DIR):

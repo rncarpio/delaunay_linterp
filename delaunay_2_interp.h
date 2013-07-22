@@ -42,6 +42,49 @@ ContainerT subset_of_sequence(ContainerT const &set, BitSetT const &subset) {
   return result;
 }
 
+////////////////////////////////////////////////////////////////////////
+// CGAL typedefs
+
+//typedef CGAL::Exact_predicates_exact_constructions_kernel K;
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Triangulation_euclidean_traits_2<K>  Gt;
+  
+// this is the class used in CGAL::Triangulation_face_base_with_info_2.
+class Face_Info {
+public:
+  array<K::RT, 2> m_gradient;
+};
+
+typedef K::Point_2   Point;
+typedef K::RT RT;
+typedef K::Line_2 Line_2;
+typedef CGAL::Cartesian_d<RT> Kernel_d;
+typedef Kernel_d::LA LA;
+typedef LA::Matrix Matrix;
+
+typedef CGAL::Triangulation_vertex_base_with_info_2<RT, Gt> Vertex_base;
+typedef CGAL::Triangulation_face_base_with_info_2<Face_Info, Gt> Face_base;
+typedef CGAL::Triangulation_data_structure_2<Vertex_base, Face_base> TDS;
+typedef CGAL::Delaunay_triangulation_2<Gt, TDS> Delaunay_2;
+typedef Delaunay_2::Vertex_handle Vertex_handle;
+typedef Delaunay_2::Face_handle Face_handle;
+typedef Delaunay_2::Edge Edge;
+typedef Delaunay_2::Face_circulator Face_circulator;
+typedef Delaunay_2::Edge_circulator Edge_circulator;
+typedef CGAL::Oriented_side Oriented_side;
+
+typedef array<RT,3> RT_3;
+typedef array<RT,2> RT_2;
+typedef vector<Face_handle> Face_handle_vec;
+
+double RT_to_double(double const &x) {
+  return x;
+}
+
+double RT_to_double(CGAL::Lazy_exact_nt<CGAL::Gmpq> const &x) {
+  return CGAL::to_double(x);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 // mathematical functions
 
@@ -202,41 +245,6 @@ vector<RT> compute_barycentric_coords(IterT points_begin, IterT points_end, Poin
   return result;
 }
 
-////////////////////////////////////////////////////////////////////////
-// CGAL typedefs
-
-//typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Triangulation_euclidean_traits_2<K>  Gt;
-  
-// this is the class used in CGAL::Triangulation_face_base_with_info_2.
-class Face_Info {
-public:
-  array<K::RT, 2> m_gradient;
-};
-
-typedef K::Point_2   Point;
-typedef K::RT RT;
-typedef K::Line_2 Line_2;
-typedef CGAL::Cartesian_d<RT> Kernel_d;
-typedef Kernel_d::LA LA;
-typedef LA::Matrix Matrix;
-
-typedef CGAL::Triangulation_vertex_base_with_info_2<RT, Gt> Vertex_base;
-typedef CGAL::Triangulation_face_base_with_info_2<Face_Info, Gt> Face_base;
-typedef CGAL::Triangulation_data_structure_2<Vertex_base, Face_base> TDS;
-typedef CGAL::Delaunay_triangulation_2<Gt, TDS> Delaunay_2;
-typedef Delaunay_2::Vertex_handle Vertex_handle;
-typedef Delaunay_2::Face_handle Face_handle;
-typedef Delaunay_2::Edge Edge;
-typedef Delaunay_2::Face_circulator Face_circulator;
-typedef Delaunay_2::Edge_circulator Edge_circulator;
-typedef CGAL::Oriented_side Oriented_side;
-
-typedef array<RT,3> RT_3;
-typedef array<RT,2> RT_2;
-typedef vector<Face_handle> Face_handle_vec;
-
 //////////////////////////////////////////////////////////////////////
 // hash-related functions
 
@@ -259,14 +267,6 @@ size_t hash_sequence(IterT begin, IterT end, HashFnT const &hash_fn) {
 
 /////////////////////////////////////////////////////////////////////////////
 // conversion functions
-
-double RT_to_double(double const &x) {
-  return x;
-}
-
-double RT_to_double(CGAL::Lazy_exact_nt<CGAL::Gmpq> const &x) {
-  return CGAL::to_double(x);
-}
 
 std::string Point_to_string(Point const &p) {
   std::string result("(");
@@ -377,13 +377,6 @@ public:
   }
 };
 
-struct ErrorTuple_to_python { 
-  static PyObject* convert(ErrorTuple const &arg) {
-    bpl::tuple result = bpl::make_tuple(arg.m_err, arg.m_f, arg.m_x);
-    return boost::python::incref(result.ptr());
-  }                                            
-}; 
-
 typedef boost::heap::skew_heap<ErrorTuple, boost::heap::mutable_<true> > Error_Priority_Queue;
 // for each Face, there may be one or more sub-simplices (including the Face itself) with associated error information.
 typedef boost::unordered_map<Face_handle, vector<Error_Priority_Queue::handle_type>, CGAL::Handle_hash_function > Face_ErrorList_Map;
@@ -428,14 +421,18 @@ public:
 	Face_handle_vec F1, F2;	
     if (fc != NULL) {           
       do {
-		fc->info().m_pFace = (void*) Handle_hash_fn(fc);		
           std::get<0>(result).push_back(fc);		
 	  } while ( ++fc != done2 ); 
     } 
 	vh->info() = f;                                 // set f value of vertex
-	return result;
+    return result;
   }
-  
+ 
+  template <class IterT>
+  void insert(IterT x_begin, double f) {
+    insert(Point(x_begin[0], x_begin[1]), f);
+  }
+
   void insert(Point const &x, double f) {
     Face_handle_vec modified_faces, deleted_faces;
     std::tie(modified_faces, deleted_faces) = insert_and_get_modifications(x, f);
@@ -525,8 +522,8 @@ public:
 	  } else { // not found 
         done = true;       		
 	    char pcTemp[1024];
-	    sprintf(pcTemp, "interp: no simplex containing the point could be found: face=0x%x, lt=%d", face, lt);
-	    bpl_assert(false, pcTemp);
+	    sprintf(pcTemp, "interp: no simplex containing the point could be found: face=0x%x, lt=%d", Handle_hash_fn(face), lt);
+            throw std::invalid_argument(pcTemp);
         result = std::numeric_limits<double>::quiet_NaN();		
 	  }	
     }
