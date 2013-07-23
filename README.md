@@ -18,6 +18,9 @@ The [CGAL](http://www.cgal.org) computational geometry library is used for the u
 
 Points can be added incrementally. In addition, a function specifying `f(x)` can be passed to the triangulation.  `delaunay_linterp` can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.
 
+### Coming soon:
+* 3D, nD triangulations
+
 ### C++ interface
 Here is an example in C++:
 ```c++
@@ -150,9 +153,11 @@ def plot_triang_2d(triang, title=None, show_concave=False):
 		ax.set_title(title)
 	return ax
 	
+# the function to be approximated	
 def fn(x):
 	return x[0]**0.3 * x[1]**0.6
-	
+
+# create triangulation object	
 triang = _delaunay2.DelaunayInterp2(fn)
 
 # insert boundary points
