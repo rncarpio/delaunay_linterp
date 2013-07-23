@@ -784,12 +784,12 @@ public:
     Oriented_side side1 = PQ.oriented_side(face1->vertex(i_e1)->point());
 	Oriented_side side_P_left = PQ.oriented_side(P_left);
 	Oriented_side side_P_down = PQ.oriented_side(P_down);
-	if (side_P_left == CGAL::ON_BOUNDARY) {  // PQ is horizontal
+	if (side_P_left == CGAL::ON_ORIENTED_BOUNDARY) {  // PQ is horizontal
 	  dgrad_x = 0.0;
 	} else if (side_P_left != side1) {	     // face1 is to right of PQ
 	  dgrad_x = -dgrad_x;
 	}
-	if (side_P_down == CGAL::ON_BOUNDARY) {  // PQ is vertical
+	if (side_P_down == CGAL::ON_ORIENTED_BOUNDARY) {  // PQ is vertical
 	  dgrad_y = 0.0;
 	} else if (side_P_down != side1) {	     // face1 is above PQ
 	  dgrad_y = -dgrad_y;

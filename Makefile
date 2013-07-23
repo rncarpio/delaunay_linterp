@@ -12,14 +12,17 @@ endif
 #############################
 
 ifeq ($(COMPILER), gcc)	
-	BOOST_DIR = $(HOME)/local/src/boost_1_51_0
+	BOOST_DIR = $(HOME)/boost_1_54_0
 	BOOST_INC_DIR = $(BOOST_DIR)
 	PYTHON_DIR = $(HOME)/local
 	PYTHON_INC_DIRS = $(HOME)/local/include/python2.7 $(HOME)/local/lib/python2.7/site-packages/numpy/core/include
 	CGAL_DIR = $(HOME)/CGAL-4.2/include
+	CGAL_LIB_DIR = $(HOME)/CGAL-4.2/lib
 	EIGEN_DIR = $(HOME)/eigen
-	GMP_DIR = $(HOME)/local/include
-	MPFR_DIR = $(HOME)/local/include
+	GMP_DIR = /usr/include
+	GMP_LIB_DIR = /usr/lib/i386-linux-gnu
+	MPFR_DIR = /usr/include
+	MPFR_LIB_DIR = /usr/lib/i386-linux-gnu
 else
 	BOOST_DIR = c:/boost/boost_1_49_0
 	BOOST_INC_DIR = $(BOOST_DIR)
@@ -42,8 +45,8 @@ BOOST_LIB_DIR = $(BOOST_DIR)/lib
 ifeq ($(COMPILER), gcc)	
 	PYTHON_LIB = python2.7
 	BOOST_PYTHON_LIB = boost_python
-	LIB_PATHS = $(HOME)/local/lib $(HOME)/local/src/boost_1_51_0/stage/lib
-	LIBS = -l$(BOOST_PYTHON_LIB) -l$(PYTHON_LIB) -lgmp -lmpfr
+	LIB_PATHS = $(HOME)/local/lib $(BOOST_LIB_DIR) $(PYTHON_LIB_DIRS) $(GMP_LIB_DIR) $(MPFR_LIB_DIR) $(CGAL_LIB_DIR)
+	LIBS = -l$(BOOST_PYTHON_LIB) -l$(PYTHON_LIB) -lgmp -lmpfr -lCGAL
 	LIB_DIRS = $(foreach dir, $(LIB_PATHS), -L$(dir))
 else	
 	PYTHON_LIB = python27
