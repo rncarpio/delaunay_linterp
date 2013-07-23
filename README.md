@@ -3,7 +3,7 @@ Project page: http://rncarpio.github.com/delaunay_linterp
 ### What is `delaunay_linterp`?
 `delaunay_linterp` is a C++ header-only library for N-dimensional piecewise linear interpolation of unstructured data, similar to Matlab's 
 [griddata](http://www.mathworks.com/help/matlab/ref/griddata.html) and SciPy's [griddata](http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html) commands. Suppose we are given a set of data
-points `(x, f(x))` where `x` is N-dimensional. The idea is to construct an N-dimensional (Delaunay triangulation)[http://en.wikipedia.org/wiki/Delaunay_triangulation] of the `x` coordinates of the data points; each vertex in the triangulation corresponds to a data point `(x, f(x))`. To compute an interpolated value for `xi`, we:
+points `(x, f(x))` where `x` is N-dimensional. The idea is to construct an N-dimensional [Delaunay triangulation](http://en.wikipedia.org/wiki/Delaunay_triangulation) of the `x` coordinates of the data points; each vertex in the triangulation corresponds to a data point `(x, f(x))`. To compute an interpolated value for `xi`, we:
 * locate the simplex containing `xi`
 * calculate the barycentric coordinates of `xi` in the simplex
 * calculate `interp(xi)` as a weighted sum of the values of `f(x)` at the vertices of the simplex
