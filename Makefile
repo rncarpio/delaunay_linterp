@@ -26,8 +26,13 @@ else
 	PYTHON_DIR = c:/Python27
 	PYTHON_INC_DIRS = $(PYTHON_DIR)/include $(PYTHON_DIR)/lib/site-packages/numpy/core/include
 	PYTHON_LIB_DIRS = $(PYTHON_DIR)/libs
-	CGAL_DIR = ../../dev/CGAL-4.2
-	EIGEN_DIR = ../../dev/eigen	
+	CGAL_DIR = ../../CGAL-4.2/include
+	CGAL_LIB_DIR = ../../CGAL-4.2/lib/Release
+	EIGEN_DIR = ../../eigen	
+	GMP_DIR = ../../mpfr_mpir_x86_x64_msvc2010/mpir/dll/Win32/Release
+	GMP_LIB_DIR = ../../mpfr_mpir_x86_x64_msvc2010/mpir/dll/Win32/Release	
+	MPFR_DIR = ../../mpfr_mpir_x86_x64_msvc2010/mpfr
+	MPFR_LIB_DIR = ../../mpfr_mpir_x86_x64_msvc2010/mpfr/dll/Win32/Release
 endif
 
 PYUBLAS_INC_DIR = .
@@ -43,10 +48,10 @@ ifeq ($(COMPILER), gcc)
 else	
 	PYTHON_LIB = python27
 	BOOST_PYTHON_LIB = boost_python-vc100-mt-1_49
-	LIB_PATHS = $(BOOST_LIB_DIR) $(PYTHON_LIB_DIRS)
+	LIB_PATHS = $(BOOST_LIB_DIR) $(PYTHON_LIB_DIRS) $(GMP_LIB_DIR) $(MPFR_LIB_DIR) $(CGAL_LIB_DIR)
 	LIB_NAMES = $(BOOST_PYTHON_LIB) $(PYTHON_LIB)
 	LIB_DIRS = $(foreach dir, $(LIB_PATHS), /LIBPATH:$(dir))
-	LIBS = $(BOOST_LIB_DIR)/$(BOOST_PYTHON_LIB).lib $(PYTHON_LIB).lib
+	LIBS = $(BOOST_LIB_DIR)/$(BOOST_PYTHON_LIB).lib $(PYTHON_LIB).lib mpir.lib mpfr.lib
 endif
 
 BUILD_DIR = build
@@ -135,7 +140,7 @@ EXE_FILES = $(foreach target, $(EXE_TARGETS), $(BUILD_DIR)/$(target)$(EXE_PREFIX
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
-all: $(BUILD_DIR) $(EXE_FILES) _linterp_python$(DL_SUFFIX)
+all: $(BUILD_DIR) $(EXE_FILES) _delaunay_2_python$(DL_SUFFIX)
 
 clean:
 ifeq ($(COMPILER), gcc)

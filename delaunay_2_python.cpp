@@ -1,8 +1,39 @@
 
+/*
+	This file is part of delaunay_linterp.
+
+    delaunay_linterp is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+	
 #include <boost/python.hpp>
 #include <boost/python/operators.hpp>
 
 #include "delaunay_2_interp.h"
+#include <Python.h>
+#include <numpy/arrayobject.h>
+#include <pyublas/numpy.hpp>
+
+namespace bpl = boost::python;
+
+#define bpl_assert(exp, s)	\
+	if (!(exp)) {				\
+      PyErr_SetString(PyExc_ValueError, (s));	\
+      boost::python::throw_error_already_set();	\
+	}	
+
+typedef pyublas::numpy_vector<double> dPyArr;
+typedef vector<dPyArr> dPyArrVector;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // convert to/from Python types
@@ -142,7 +173,30 @@ struct ErrorTuple_to_python {
   }
 };
 
-BOOST_PYTHON_MODULE(_delaunay_interp2)
+class Delaunay_incremental_interp_2_wrap : public Delaunay_incremental_interp_2 {
+public:
+  typedef Delaunay_incremental_interp_2 super;
+  bpl::object m_fn_obj;
+  Delaunay_incremental_interp_2_wrap(bpl::object fn) 
+  : Delaunay_incremental_interp_2()
+  {
+    if (fn != bpl::object()) {
+	  super::m_fn = [=](double x1, double x2)->double { return this->call_python_fn(x1, x2); };  
+      m_fn_obj = fn;	  
+    }
+  }
+    
+  double call_python_fn(double x1, double x2) const {
+    bpl::list args;    
+    args.append(x1);
+	args.append(x2);   
+    bpl::object result = m_fn_obj(args);
+    double d_result = bpl::extract<double>(result);
+    return d_result;
+  }
+};
+  
+BOOST_PYTHON_MODULE(_delaunay_2_python)
 {   
   bpl::converter::registry::push_back(&Point_from_python_list<2>::check, &Point_from_python_list<2>::construct, bpl::type_id<Point >());
   bpl::to_python_converter<CGAL::Lazy_exact_nt<class CGAL::Gmpq>, RT_to_double_struct >();
@@ -156,7 +210,7 @@ BOOST_PYTHON_MODULE(_delaunay_interp2)
   bpl::to_python_converter<std::tuple<Point, int>, tuple_2_to_python<Point, int> >();
   bpl::to_python_converter<vector<std::tuple<Point, int>>, forward_iterable_to_list<vector<std::tuple<Point, int>> > >();
   
-  bpl::to_python_converter<std::tuple<vector<std::tuple<RT_3, RT_3, int> >, dPyArr, dPyArr>, tuple_3_to_python<vector<std::tuple<RT_3, RT_3, int> >, dPyArr, dPyArr> >();
+  bpl::to_python_converter<std::tuple<vector<std::tuple<RT_3, RT_3, int> >, array<double,3>, array<double,3>>, tuple_3_to_python<vector<std::tuple<RT_3, RT_3, int> >, array<double,3>, array<double,3>> >();
   
   bpl::enum_<CGAL::Bounded_side>("Bounded_side")
         .value("ON_UNBOUNDED_SIDE", CGAL::ON_UNBOUNDED_SIDE)
@@ -164,16 +218,15 @@ BOOST_PYTHON_MODULE(_delaunay_interp2)
 		.value("ON_BOUNDED_SIDE", CGAL::ON_BOUNDED_SIDE)
         ;  
 
-  bpl::class_<Delaunay_incremental_interp_2, boost::noncopyable>("DelaunayInterp2", bpl::init<bpl::object>())
-		.def("insert_only", &Delaunay_incremental_interp_2::insert_only)
-		.def("insert_with_update", &Delaunay_incremental_interp_2::insert_and_update_error_queue)		
-		.def("interp", &Delaunay_incremental_interp_2::interp)
-		.def("get_error_queue", &Delaunay_incremental_interp_2::get_error_queue)
-		.def("get_largest_error_tuple", &Delaunay_incremental_interp_2::get_largest_error_tuple)
-		.def("insert_largest_error_point", &Delaunay_incremental_interp_2::insert_largest_error_point)
-		.def("get_line_segments", &Delaunay_incremental_interp_2::get_line_segments)
-		.def("get_all_vertices", &Delaunay_incremental_interp_2::get_all_vertices)
-		.def("gradient", &Delaunay_incremental_interp_2::gradient)
+  bpl::class_<Delaunay_incremental_interp_2_wrap, boost::noncopyable>("DelaunayInterp2", bpl::init<bpl::object>())
+		.def("insert", &Delaunay_incremental_interp_2_wrap::insert_point)		
+		.def("interp", &Delaunay_incremental_interp_2_wrap::interp_point)
+		.def("get_error_queue", &Delaunay_incremental_interp_2_wrap::get_error_queue)
+		.def("get_largest_error_tuple", &Delaunay_incremental_interp_2_wrap::get_largest_error_tuple)
+		.def("insert_largest_error_point", &Delaunay_incremental_interp_2_wrap::insert_largest_error_point)
+		.def("get_line_segments", &Delaunay_incremental_interp_2_wrap::get_line_segments)
+		.def("get_all_vertices", &Delaunay_incremental_interp_2_wrap::get_all_vertices)
+		.def("gradient", &Delaunay_incremental_interp_2_wrap::gradient)
 		;
 
 }

@@ -1,4 +1,21 @@
 
+/*
+	This file is part of delaunay_linterp.
+
+    delaunay_linterp is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <assert.h>
 #include <math.h>
 #include <stdarg.h>
@@ -429,11 +446,11 @@ public:
   }
  
   template <class IterT>
-  void insert(IterT x_begin, double f) {
-    insert(Point(x_begin[0], x_begin[1]), f);
+  void insert(IterT x_begin, IterT x_end, double f) {
+    insert_point(Point(x_begin[0], x_begin[1]), f);
   }
 
-  void insert(Point const &x, double f) {
+  void insert_point(Point const &x, double f) {
     Face_handle_vec modified_faces, deleted_faces;
     std::tie(modified_faces, deleted_faces) = insert_and_get_modifications(x, f);
 	
@@ -480,15 +497,20 @@ public:
     assert(m_err_pqueue.size() > 0);
 	assert(m_fn);
 	ErrorTuple result = m_err_pqueue.top();
-	insert(result.m_x, result.m_f);
+	insert_point(result.m_x, result.m_f);
 	return result;
   }
 
   ErrorTuple get_largest_error_tuple() const {    
     return m_err_pqueue.top();
   }
+
+  template <class IterT>
+  double interp(IterT x_begin, IterT x_end) {
+    return interp_point(Point(x_begin[0], x_begin[1]));
+  }
   
-  double interp(Point const &x) const {  
+  double interp_point(Point const &x) const {  
     double result;    
     Delaunay_2::Locate_type lt;
     int li;
@@ -779,7 +801,21 @@ public:
   }
   //////////////////////////////////////////////////////////////////
   // Plotting-related functions
-  vector<std::tuple<Point, int>> get_all_vertices() const {
+  vector<array<double,N+1> > get_all_vertices() const {
+    vector<array<double,N+1> > result;
+    Delaunay_2::Finite_vertices_iterator it;
+	array<double,N+1> x;
+	for (it = m_pTriang->finite_vertices_begin(); it != m_pTriang->finite_vertices_end(); it++) {
+	  for (int i=0; i<N; i++) {
+	    x[i] = RT_to_double(it->point()[i]);
+	  }
+	  x[N] = it->info();
+	  result.push_back(x);
+	}
+	return result;
+  }
+
+  vector<std::tuple<Point, int>> get_all_vertices2() const {
     vector<std::tuple<Point, int>> result;
     Delaunay_2::Finite_vertices_iterator it;
 	for (it = m_pTriang->finite_vertices_begin(); it != m_pTriang->finite_vertices_end(); it++) {
