@@ -126,7 +126,9 @@ adaptive grid: sum of squared errors: 0.044019
 ```
 
 ### Python interface
-A Python interface is provided, using Andreas Klöckner's [pyublas] (http://mathema.tician.de/software/pyublas) library. Example:
+A Python interface is provided, using Andreas Klöckner's [pyublas] (http://mathema.tician.de/software/pyublas) library. Pre-built binaries are in the `windows_binaries` directory; these were built against [PythonXY](https://code.google.com/p/pythonxy/) version 2.7.3.1.
+
+Example:
 ```python
 import scipy
 import matplotlib.pyplot as plt
