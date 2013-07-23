@@ -44,9 +44,10 @@ points <code>(x, f(x))</code> where <code>x</code> is N-dimensional. The idea is
 <li>locate the simplex containing <code>xi</code>
 </li>
 <li>calculate the barycentric coordinates of <code>xi</code> in the simplex</li>
-<li>calculate <code>interp(xi)</code> as a weighted sum of the values of <code>f(x)</code> at the vertices of the simplex
-The interpolated surface is linear within each simplex of the triangulation.</li>
-</ul><p>The <a href="http://www.cgal.org">CGAL</a> computational geometry library is used for the underlying triangulation code. Other libraries that are used are:</p>
+<li>calculate <code>interp(xi)</code> as a weighted sum of the values of <code>f(x)</code> at the vertices of the simplex</li>
+</ul><p>The interpolated surface is linear within each simplex of the triangulation.</p>
+
+<p>The <a href="http://www.cgal.org">CGAL</a> computational geometry library is used for the underlying triangulation code. Other libraries that are used are:</p>
 
 <ul>
 <li>
@@ -60,6 +61,11 @@ The interpolated surface is linear within each simplex of the triangulation.</li
 </ul><p>Points can be added incrementally. In addition, a function specifying <code>f(x)</code> can be passed to the triangulation.  <code>delaunay_linterp</code> can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.</p>
 
 <h3>
+<a name="coming-soon" class="anchor" href="#coming-soon"><span class="octicon octicon-link"></span></a>Coming soon:</h3>
+
+<ul>
+<li>3D, nD triangulations</li>
+</ul><h3>
 <a name="c-interface" class="anchor" href="#c-interface"><span class="octicon octicon-link"></span></a>C++ interface</h3>
 
 <p>Here is an example in C++:</p>
@@ -165,6 +171,60 @@ adaptive grid: 400 interpolations, 2 clocks, 0.002000 sec
 regular grid: sum of squared errors: 5.800002
 adaptive grid: sum of squared errors: 0.044019
 </code></pre>
+
+<h3>
+<a name="python-interface" class="anchor" href="#python-interface"><span class="octicon octicon-link"></span></a>Python interface</h3>
+
+<p>A Python interface is provided, using Andreas Klöckner's <a href="http://mathema.tician.de/software/pyublas">pyublas</a> library. Pre-built binaries are in the <code>windows_binaries</code> directory; these were built against <a href="https://code.google.com/p/pythonxy/">PythonXY</a> version 2.7.3.1.</p>
+
+<p>Example:</p>
+
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="kn">import</span> <span class="nn">_delaunay_2_python</span> <span class="kn">as</span> <span class="nn">_delaunay2</span>
+
+<span class="k">def</span> <span class="nf">plot_triang_2d</span><span class="p">(</span><span class="n">triang</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">show_concave</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">Axes3D</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>    
+    <span class="p">(</span><span class="n">all_segments</span><span class="p">,</span> <span class="n">min_coords</span><span class="p">,</span> <span class="n">max_coords</span><span class="p">)</span> <span class="o">=</span> <span class="n">triang</span><span class="o">.</span><span class="n">get_line_segments</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">all_segments</span><span class="p">:</span>            
+        <span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">is_concave</span><span class="p">)</span> <span class="o">=</span> <span class="n">segment</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">show_concave</span><span class="p">):</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="p">(</span><span class="s">'b'</span> <span class="k">if</span> <span class="p">(</span><span class="n">is_concave</span><span class="p">)</span> <span class="k">else</span> <span class="s">'r'</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s">'b'</span>
+        <span class="p">(</span><span class="n">xpair</span><span class="p">,</span> <span class="n">ypair</span><span class="p">,</span> <span class="n">zpair</span><span class="p">)</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">p0</span><span class="p">,</span> <span class="n">p1</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot3D</span><span class="p">(</span><span class="n">xpair</span><span class="p">,</span> <span class="n">ypair</span><span class="p">,</span> <span class="n">zpair</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">min_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">max_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">min_coords</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">max_coords</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_zlim</span><span class="p">(</span><span class="n">min_coords</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">max_coords</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">title</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ax</span>
+
+<span class="c"># the function to be approximated   </span>
+<span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mf">0.3</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mf">0.6</span>
+
+<span class="c"># create triangulation object   </span>
+<span class="n">triang</span> <span class="o">=</span> <span class="n">_delaunay2</span><span class="o">.</span><span class="n">DelaunayInterp2</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+
+<span class="c"># insert boundary points</span>
+<span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]</span> <span class="p">]:</span>
+    <span class="n">triang</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fn</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="c"># adaptively place points</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">triang</span><span class="o">.</span><span class="n">insert_largest_error_point</span><span class="p">()</span>
+
+<span class="c"># plot triangulation</span>
+<span class="n">plot_triang_2d</span><span class="p">(</span><span class="n">triang</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">"f(x) = x[0]**0.3 * x[1]**0.6"</span><span class="p">)</span>
+</pre></div>
+
+<p>produces
+<img src="https://raw.github.com/rncarpio/delaunay_linterp/master/example1.png" alt=""></p>
 
 <h3>
 <a name="license-gplv3" class="anchor" href="#license-gplv3"><span class="octicon octicon-link"></span></a>License: GPLv3</h3>
