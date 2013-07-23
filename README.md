@@ -167,7 +167,7 @@ for i in range(100):
 plot_triang_2d(triang, title="f(x) = x[0]**0.3 * x[1]**0.6")
 ```
 produces
-![](https://raw.github.com/rncarpio/linterp/master/example1.png)
+![](https://raw.github.com/rncarpio/delaunay_linterp/master/example1.png)
 	
 ### License: GPLv3
 
