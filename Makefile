@@ -137,7 +137,7 @@ endif
 ## targets
 #########################
 
-EXE_TARGETS = delaunay_2_test
+EXE_TARGETS = delaunay_2_test delaunay_2_test2
 EXE_FILES = $(foreach target, $(EXE_TARGETS), $(BUILD_DIR)/$(target)$(EXE_PREFIX))
 
 $(BUILD_DIR):

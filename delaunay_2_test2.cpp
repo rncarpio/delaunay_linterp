@@ -1,25 +1,21 @@
-Project page: http://rncarpio.github.com/delaunay_linterp
 
-### What is `delaunay_linterp`?
-`delaunay_linterp` is a C++ header-only library for N-dimensional piecewise linear interpolation of unstructured data, similar to Matlab's 
-[griddata](http://www.mathworks.com/help/matlab/ref/griddata.html) and SciPy's [griddata](http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html) commands. Suppose we are given a set of data
-points `(x, f(x))` where `x` is N-dimensional. The idea is to construct an N-dimensional (Delaunay triangulation)[http://en.wikipedia.org/wiki/Delaunay_triangulation] of the `x` coordinates of the data points; each vertex in the triangulation corresponds to a data point `(x, f(x))`. To compute an interpolated value for `xi`, we:
-* locate the simplex containing `xi`
-* calculate the barycentric coordinates of `xi` in the simplex
-* calculate `interp(xi)` as a weighted sum of the values of `f(x)` at the vertices of the simplex
-The interpolated surface is linear within each simplex of the triangulation.
+/*
+	This file is part of delaunay_linterp.
 
-The [CGAL](http://www.cgal.org) computational geometry library is used for the underlying triangulation code. Other libraries that are used are:
-* [Boost](http://www.boost.org) - C++ libraries
-* [GMP](http://gmplib.org) - arbitrary precision arithmetic (on Windows, [MPIR](http://www.mpir.org/) is used)
-* [MPFR](http:/www.mpfr.org) - multi-precision floating point
-* [Eigen](http://eigen.tuxfamily.org) - C++ linear algebra
+    delaunay_linterp is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-Points can be added incrementally. In addition, a function specifying `f(x)` can be passed to the triangulation.  `delaunay_linterp` can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-### C++ interface
-Here is an example in C++:
-```c++
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <ctime>
 #include "delaunay_2_interp.h"
 
@@ -110,28 +106,4 @@ int main(int argc, char **argv) {
   
   return 0;
 }
-```
-produces:
-```
-regular grid: 100 insertions, 6 clocks, 0.006000 sec
-adaptive grid: 100 insertions, 11 clocks, 0.011000 sec
-regular grid: 400 interpolations, 2 clocks, 0.002000 sec
-adaptive grid: 400 interpolations, 2 clocks, 0.002000 sec
-regular grid: sum of squared errors: 5.800002
-adaptive grid: sum of squared errors: 0.044019
-```
-	
-### License: GPLv3
 
-delaunay_linterp is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
