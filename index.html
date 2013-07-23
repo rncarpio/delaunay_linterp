@@ -31,32 +31,156 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>Welcome to GitHub Pages.</h3>
+        <p>Project page: <a href="http://rncarpio.github.com/delaunay_linterp">http://rncarpio.github.com/delaunay_linterp</a></p>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<h3>
+<a name="what-is-delaunay_linterp" class="anchor" href="#what-is-delaunay_linterp"><span class="octicon octicon-link"></span></a>What is <code>delaunay_linterp</code>?</h3>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<p><code>delaunay_linterp</code> is a C++ header-only library for N-dimensional piecewise linear interpolation of unstructured data, similar to Matlab's 
+<a href="http://www.mathworks.com/help/matlab/ref/griddata.html">griddata</a> and SciPy's <a href="http://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html">griddata</a> commands. Suppose we are given a set of data
+points <code>(x, f(x))</code> where <code>x</code> is N-dimensional. The idea is to construct an N-dimensional <a href="http://en.wikipedia.org/wiki/Delaunay_triangulation">Delaunay triangulation</a> of the <code>x</code> coordinates of the data points; each vertex in the triangulation corresponds to a data point <code>(x, f(x))</code>. To compute an interpolated value for <code>xi</code>, we:</p>
+
+<ul>
+<li>locate the simplex containing <code>xi</code>
+</li>
+<li>calculate the barycentric coordinates of <code>xi</code> in the simplex</li>
+<li>calculate <code>interp(xi)</code> as a weighted sum of the values of <code>f(x)</code> at the vertices of the simplex
+The interpolated surface is linear within each simplex of the triangulation.</li>
+</ul><p>The <a href="http://www.cgal.org">CGAL</a> computational geometry library is used for the underlying triangulation code. Other libraries that are used are:</p>
+
+<ul>
+<li>
+<a href="http://www.boost.org">Boost</a> - C++ libraries</li>
+<li>
+<a href="http://gmplib.org">GMP</a> - arbitrary precision arithmetic (on Windows, <a href="http://www.mpir.org/">MPIR</a> is used)</li>
+<li>
+<a href="http:/www.mpfr.org">MPFR</a> - multi-precision floating point</li>
+<li>
+<a href="http://eigen.tuxfamily.org">Eigen</a> - C++ linear algebra</li>
+</ul><p>Points can be added incrementally. In addition, a function specifying <code>f(x)</code> can be passed to the triangulation.  <code>delaunay_linterp</code> can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.</p>
+
+<h3>
+<a name="c-interface" class="anchor" href="#c-interface"><span class="octicon octicon-link"></span></a>C++ interface</h3>
+
+<p>Here is an example in C++:</p>
+
+<div class="highlight"><pre><span class="cp">#include &lt;ctime&gt;</span>
+<span class="cp">#include "delaunay_2_interp.h"</span>
+
+<span class="c1">// return an evenly spaced 1-d grid of doubles.</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">linspace</span><span class="p">(</span><span class="kt">double</span> <span class="n">first</span><span class="p">,</span> <span class="kt">double</span> <span class="n">last</span><span class="p">,</span> <span class="kt">int</span> <span class="n">len</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">(</span><span class="n">len</span><span class="p">);</span>
+  <span class="kt">double</span> <span class="n">step</span> <span class="o">=</span> <span class="p">(</span><span class="n">last</span><span class="o">-</span><span class="n">first</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">len</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="n">step</span><span class="p">;</span> <span class="p">}</span>
+  <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// the function to interpolate.</span>
+<span class="kt">double</span> <span class="n">fn</span> <span class="p">(</span><span class="kt">double</span> <span class="n">x1</span><span class="p">,</span> <span class="kt">double</span> <span class="n">x2</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">pow</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">*</span> <span class="n">pow</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span><span class="mf">0.6</span><span class="p">);</span> <span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">n_points</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+  <span class="kt">clock_t</span> <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">;</span>      
+
+  <span class="c1">// first, try a rectangular grid</span>
+  <span class="n">Delaunay_incremental_interp_2</span> <span class="n">triang</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="n">n_points</span><span class="p">);</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span> 
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n_points</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">n_points</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">grid</span><span class="p">[</span><span class="n">j</span><span class="p">]};</span>
+      <span class="n">triang</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"regular grid: %d insertions, %d clocks, %f sec</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n_points</span><span class="o">*</span><span class="n">n_points</span><span class="p">,</span> <span class="p">(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">),</span> <span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">))</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">);</span>
+
+  <span class="c1">// second, try adaptive point placement</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">(</span><span class="kt">double</span><span class="p">,</span> <span class="kt">double</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">fn_obj</span><span class="p">(</span><span class="n">fn</span><span class="p">);</span>
+  <span class="n">Delaunay_incremental_interp_2</span> <span class="nf">adaptive_triang</span><span class="p">(</span><span class="n">fn_obj</span><span class="p">);</span>
+  <span class="c1">// insert boundary points</span>
+  <span class="n">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">args</span><span class="p">;</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">front</span><span class="p">();</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>   <span class="n">adaptive_triang</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+  <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">front</span><span class="p">();</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>    <span class="n">adaptive_triang</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+  <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">back</span><span class="p">();</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">front</span><span class="p">();</span>    <span class="n">adaptive_triang</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+  <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">back</span><span class="p">();</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">grid</span><span class="p">.</span><span class="n">back</span><span class="p">();</span>     <span class="n">adaptive_triang</span><span class="p">.</span><span class="n">insert</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n_points</span><span class="o">*</span><span class="n">n_points</span><span class="o">-</span><span class="mi">4</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">adaptive_triang</span><span class="p">.</span><span class="n">insert_largest_error_point</span><span class="p">();</span>
+  <span class="p">}</span> 
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"adaptive grid: %d insertions, %d clocks, %f sec</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">n_points</span><span class="o">*</span><span class="n">n_points</span><span class="p">,</span> <span class="p">(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">),</span> <span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">))</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">);</span>
+
+  <span class="c1">// compare interpolated value vs. actual function</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">true_f_vals</span><span class="p">,</span> <span class="n">interp_grid</span> <span class="o">=</span> <span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">n_points</span><span class="p">);</span>  
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">interp_grid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">interp_grid</span><span class="p">[</span><span class="n">j</span><span class="p">]};</span>
+      <span class="n">true_f_vals</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">fn</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="c1">// get the interpolated values  </span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">regular_triang_vals</span><span class="p">,</span> <span class="n">adaptive_triang_vals</span><span class="p">;</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>   
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">interp_grid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">interp_grid</span><span class="p">[</span><span class="n">j</span><span class="p">]};</span>
+      <span class="n">regular_triang_vals</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">triang</span><span class="p">.</span><span class="n">interp</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">()));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"regular grid: %d interpolations, %d clocks, %f sec</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">regular_triang_vals</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="p">(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">),</span> <span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">))</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">);</span>
+  <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>   
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">interp_grid</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">interp_grid</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">interp_grid</span><span class="p">[</span><span class="n">j</span><span class="p">]};</span>
+      <span class="n">adaptive_triang_vals</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">adaptive_triang</span><span class="p">.</span><span class="n">interp</span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">args</span><span class="p">.</span><span class="n">end</span><span class="p">()));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">();</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"adaptive grid: %d interpolations, %d clocks, %f sec</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">adaptive_triang_vals</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="p">(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">),</span> <span class="p">((</span><span class="kt">double</span><span class="p">)(</span><span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span><span class="p">))</span> <span class="o">/</span> <span class="n">CLOCKS_PER_SEC</span><span class="p">);</span>
+
+  <span class="c1">// compute sum of squared errors</span>
+  <span class="kt">double</span> <span class="n">sse1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sse2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">diff</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">true_f_vals</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">true_f_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">regular_triang_vals</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">sse1</span> <span class="o">+=</span> <span class="n">diff</span><span class="o">*</span><span class="n">diff</span><span class="p">;</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">true_f_vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">adaptive_triang_vals</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">sse2</span> <span class="o">+=</span> <span class="n">diff</span><span class="o">*</span><span class="n">diff</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"regular grid: sum of squared errors: %f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">sse1</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"adaptive grid: sum of squared errors: %f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">sse2</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>produces:</p>
+
+<pre><code>regular grid: 100 insertions, 6 clocks, 0.006000 sec
+adaptive grid: 100 insertions, 11 clocks, 0.011000 sec
+regular grid: 400 interpolations, 2 clocks, 0.002000 sec
+adaptive grid: 400 interpolations, 2 clocks, 0.002000 sec
+regular grid: sum of squared errors: 5.800002
+adaptive grid: sum of squared errors: 0.044019
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<h3>
+<a name="license-gplv3" class="anchor" href="#license-gplv3"><span class="octicon octicon-link"></span></a>License: GPLv3</h3>
 
-<h3>Designer Templates</h3>
+<p>delaunay_linterp is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
 
-<h3>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see <a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>.</p>
       </section>
     </div>
 
