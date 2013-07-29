@@ -61,10 +61,19 @@ points <code>(x, f(x))</code> where <code>x</code> is N-dimensional. The idea is
 </ul><p>Points can be added incrementally. In addition, a function specifying <code>f(x)</code> can be passed to the triangulation.  <code>delaunay_linterp</code> can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.</p>
 
 <h3>
-<a name="coming-soon" class="anchor" href="#coming-soon"><span class="octicon octicon-link"></span></a>Coming soon:</h3>
+<a name="dd-vs-2d" class="anchor" href="#dd-vs-2d"><span class="octicon octicon-link"></span></a>dD vs. 2D</h3>
+
+<p>CGAL has more than one package for constructing a Delaunay triangulation:</p>
 
 <ul>
-<li>3D, nD triangulations</li>
+<li>a <a href="http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_d/Chapter_main.html">d-dimensional</a> library that uses the lifting transform, then constructs a convex hull in d+1 dimensions. This is very flexible and can handle arbitrary dimensions, but it is much slower than the libraries specifically designed for 2D and 3D.</li>
+<li>
+<a href="http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_2/Chapter_main.html">2D</a> and <a href="http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_3/Chapter_main.html">3D</a> specific libraries which are much faster.</li>
+</ul><p><code>delaunay_linterp</code> provides classes using the dD and 2D libraries (3D coming soon...). </p>
+
+<ul>
+<li>for dD, use the <code>delaunay_d_interp</code> class. Caveats: currently, it cannot handle interpolation queries outside the convex hull of the inserted points</li>
+<li>for 2D, use the <code>delaunay_2_interp</code> class</li>
 </ul><h3>
 <a name="c-interface" class="anchor" href="#c-interface"><span class="octicon octicon-link"></span></a>C++ interface</h3>
 
