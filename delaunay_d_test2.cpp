@@ -34,8 +34,12 @@ int main(int argc, char **argv) {
   int n_points = 10;
   clock_t t1, t2;      
 
-  char pcTemp[1024];
-  gets(pcTemp);
+  if (argc > 1) {
+    char pcTemp[1024];
+    printf("Press return to continue\n");
+    gets(pcTemp);
+  }
+
   
   // first, try a rectangular grid
   Delaunay_incremental_interp_d triang(2);

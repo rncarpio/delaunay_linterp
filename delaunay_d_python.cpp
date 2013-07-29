@@ -242,6 +242,7 @@ public:
 };
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(insert_overloads, Delaunay_d::insert, 1, 2)
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(insert_overloads2, Convex_hull_d::insert, 1, 2)
 
 BOOST_PYTHON_MODULE(_delaunay_d_python)
 { 
@@ -315,7 +316,8 @@ BOOST_PYTHON_MODULE(_delaunay_d_python)
 		.def("point_of_facet", static_cast< Point(Convex_hull_d::*)(Facet_handle, int) const> ( &Convex_hull_d::point_of_facet ))
 		.def("opposite_facet", static_cast< Facet_handle(Convex_hull_d::*)(Facet_handle, int) const> ( &Convex_hull_d::opposite_facet ))
 		.def("index_of_vertex_in_opposite_facet", static_cast< int(Convex_hull_d::*)(Facet_handle, int) const> ( &Convex_hull_d::index_of_vertex_in_opposite_facet ))
-		.def("insert", &Convex_hull_d::insert)
+//		.def("insert", &Convex_hull_d::insert)
+//		.def("insert", &Convex_hull_d::insert, insert_overloads2())		
 		.def("is_dimension_jump", &Convex_hull_d::is_dimension_jump)
 		.def("facets_visible_from", &Convex_hull_d::facets_visible_from)
 		.def("bounded_side", &Convex_hull_d::bounded_side)
