@@ -2,7 +2,7 @@
 import scipy
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import _delaunay_2_python as _delaunay2
+import _delaunay_d_python as _delaunayd
 
 def plot_triang_2d(triang, title=None, show_concave=False):
 	fig = plt.figure()
@@ -25,18 +25,19 @@ def plot_triang_2d(triang, title=None, show_concave=False):
 	return ax
 	
 def fn(x):
-	return scipy.log(2*x[0] + x[1])
-#	return x[0]**0.3 * x[1]**0.6
-	
-triang = _delaunay2.DelaunayInterp2(fn)
+#	return scipy.log(2*x[0] + x[1])
+	return x[0]**0.3 * x[1]**0.6
 
-# insert boundary points
-for x in [ [0.01, 0.01], [0.01, 3.0], [3.0, 0.01], [3.0, 3.0] ]:
-	triang.insert(x, fn(x))
-	
-# adaptively place points
-for i in range(100):
-	triang.insert_largest_error_point()
-	
-# plot triangulation
-plot_triang_2d(triang, title="f(x) = x[0]**0.3 * x[1]**0.6", show_concave=True)
+def test1():	
+	triang = _delaunayd.Delaunay_incremental_interp_d(2, fn)
+	# insert boundary points
+	for x in [ [0.01, 0.01], [0.01, 3.0], [3.0, 0.01], [3.0, 3.0] ]:
+		triang.insert(x, fn(x))	
+	# adaptively place points
+	for i in range(50):
+		print("inserted %d" % i)
+		triang.insert_largest_error_point()	
+	# plot triangulation
+	plot_triang_2d(triang, title="f(x) = x[0]**0.3 * x[1]**0.6", show_concave=True)
+
+	return triang

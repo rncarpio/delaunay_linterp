@@ -191,30 +191,6 @@ double sqdist_point_hplane_of_points(int N, IterT p_begin, IterT2 points_begin, 
   return sqdist;
 } 
 
-// uses CGAL's built-in matrix library, so we can use CGAL's number types.
-template<int N, class NumberT, class IterT, class IterT2>
-array<NumberT,N> simplex_gradient(IterT points_begin, IterT points_end, IterT2 f_begin, IterT2 f_end) {
-  assert(points_end - points_begin == N+1);
-  assert(f_end - f_begin == N+1);
-  Matrix V(N,N);
-  Matrix df(N, 1);
-  for (int i=0; i<N; i++) {
-    for (int j=0; j<N; j++) {
-	  V(j,i) = points_begin[i+1][j] - points_begin[0][j];
-	}
-	df(i,0) = f_begin[i+1] - f_begin[0];
-  }
-  RT D = 1.0;
-  Matrix gradient = LA::transpose(LA::inverse(V, D)) * df;
-  assert(gradient.row_dimension() == N);
-  assert(gradient.column_dimension() == 1);
-  array<NumberT,N> result;
-  for (int i=0; i<N; i++) {
-    result[i] = gradient(i,0);
-  }
-  return result;
-}
-
 // compute the signed volume of a N-d simplex with N+1 points in N-d space.
 template <class IterT>
 double compute_volume(IterT points_begin, IterT points_end) {
@@ -258,6 +234,30 @@ vector<RT> compute_barycentric_coords(IterT points_begin, IterT points_end, Poin
 	double vol1 = sub_volume; // temp
 	double vol2 = whole_volume; // temp
 	result[i] = sub_volume / whole_volume;
+  }
+  return result;
+}
+
+// uses CGAL's built-in matrix library, so we can use CGAL's number types.
+template<int N, class NumberT, class IterT, class IterT2>
+array<NumberT,N> simplex_gradient(IterT points_begin, IterT points_end, IterT2 f_begin, IterT2 f_end) {
+  assert(points_end - points_begin == N+1);
+  assert(f_end - f_begin == N+1);
+  Matrix V(N,N);
+  Matrix df(N, 1);
+  for (int i=0; i<N; i++) {
+    for (int j=0; j<N; j++) {
+	  V(j,i) = points_begin[i+1][j] - points_begin[0][j];
+	}
+	df(i,0) = f_begin[i+1] - f_begin[0];
+  }
+  RT D = 1.0;
+  Matrix gradient = LA::transpose(LA::inverse(V, D)) * df;
+  assert(gradient.row_dimension() == N);
+  assert(gradient.column_dimension() == 1);
+  array<NumberT,N> result;
+  for (int i=0; i<N; i++) {
+    result[i] = gradient(i,0);
   }
   return result;
 }
@@ -405,12 +405,12 @@ public:
   std::unique_ptr<Delaunay_2> m_pTriang;  
   Error_Priority_Queue m_err_pqueue;			// priority queue of (error, f, point)
   Face_ErrorList_Map m_face_to_pqueue_handles;	// map of (face -> [pqueue handles])
-  std::function<double(double, double)> m_fn;	// callback function
+  std::function<double(int, double*)> m_fn;	// callback function
   
   Delaunay_incremental_interp_2() {
     m_pTriang.reset(new Delaunay_2);	
   }
-  Delaunay_incremental_interp_2(std::function<double(double, double)> fn) {
+  Delaunay_incremental_interp_2(std::function<double(int, double*)> fn) {
     m_pTriang.reset(new Delaunay_2);	
 	m_fn = fn;
   }  
@@ -422,9 +422,11 @@ public:
   double eval_fn_at_coords(IterT coords_begin, IterT coords_end) const {
 	int n_args = coords_end - coords_begin;
 	assert(n_args == N);
-	double x1 = coords_begin[0];
-	double x2 = coords_begin[1];
-	double result = m_fn(x1, x2);
+	array<double,N> args;
+	for (int i=0; i<N; i++) {
+	  args[i] = RT_to_double(coords_begin[i]);
+	}
+	double result = m_fn(N, &args[0]);
     return result;
   }
     
@@ -551,7 +553,7 @@ public:
     }
 	if (found) {
       // get coordinates of vertices	
-	  vector<Point> points(N+1);		
+	  array<Point, N+1> points;	  
 	  for (int i=0; i<N+1; i++) {
 	    Vertex_handle vertex = face->vertex(i);		  
 	    points[i] = vertex->point();
@@ -724,7 +726,7 @@ public:
 	typedef array<RT, N+1> point_t;    // one additional dimension for the value of f(x)
 	vector<point_t> vertex_points = get_coordinates_of_vertices(vertices.begin(), vertices.end());   // get the coordinates of the vertices	    	
 	point_t centroid;
-	get_centroid(N+1, vertex_points.begin(), vertex_points.end(), centroid.begin());	// get centroid
+	get_centroid(N, vertex_points.begin(), vertex_points.end(), centroid.begin());	// get centroid
 	double f_val = eval_fn_at_coords(centroid.begin(), centroid.begin() + N);	// evaluate fn at centroid
 	point_t centroid_with_f_val = centroid;
 	centroid_with_f_val[N] = RT(f_val);	

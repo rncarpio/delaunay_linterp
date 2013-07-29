@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
   
   // use adaptive grid
   printf("Adaptive grid:\n");
-  std::function<double(double, double)> fn = [&cd_fn] (double x1, double x2)->double { double args2[2]; args2[0] = x1; args2[1] = x2; return cd_fn(&args2[0]); };
+  std::function<double(int, double*)> fn = [&cd_fn] (int n, double *x_begin)->double { return cd_fn(x_begin); };
   Delaunay_incremental_interp_2 adaptive_triang(fn);
   // insert boundary points
   args[0] = grid1.front(); args[1] = grid2.front(); f_val = cd_fn(args.begin()); adaptive_triang.insert(args.begin(), args.end(), f_val);

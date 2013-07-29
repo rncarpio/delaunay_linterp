@@ -17,7 +17,7 @@
 */
 
 #include <ctime>
-#include "delaunay_2_interp.h"
+#include "delaunay_d_interp.h"
 
 // return an evenly spaced 1-d grid of doubles.
 std::vector<double> linspace(double first, double last, int len) {
@@ -34,8 +34,11 @@ int main(int argc, char **argv) {
   int n_points = 10;
   clock_t t1, t2;      
 
+  char pcTemp[1024];
+  gets(pcTemp);
+  
   // first, try a rectangular grid
-  Delaunay_incremental_interp_2 triang;
+  Delaunay_incremental_interp_d triang(2);
   std::vector<double> grid = linspace(0.01, 5., n_points);
   t1 = clock();	
   for (int i=0; i<n_points; i++) {
@@ -49,7 +52,7 @@ int main(int argc, char **argv) {
 
   // second, try adaptive point placement
   std::function<double(int, double*)> fn_obj(fn);
-  Delaunay_incremental_interp_2 adaptive_triang(fn_obj);
+  Delaunay_incremental_interp_d adaptive_triang(2, fn_obj);
   // insert boundary points
   array<double,2> args;
   t1 = clock();
@@ -64,7 +67,7 @@ int main(int argc, char **argv) {
   printf("adaptive grid: %d insertions, %d clocks, %f sec\n", n_points*n_points, (t2-t1), ((double)(t2 - t1)) / CLOCKS_PER_SEC);
 
   // compare interpolated value vs. actual function
-  std::vector<double> true_f_vals, interp_grid = linspace(0.01, 5., 2*n_points);  
+  std::vector<double> true_f_vals, interp_grid = linspace(0.01 + 0.005, 5. - + 0.005, 2*n_points);  
   for (int i=0; i<interp_grid.size(); i++) {
     for (int j=0; j<interp_grid.size(); j++) {
 	  array<double,2> args = {interp_grid[i], interp_grid[j]};

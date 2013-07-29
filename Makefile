@@ -137,18 +137,20 @@ endif
 ## targets
 #########################
 
-EXE_TARGETS = delaunay_2_test delaunay_2_test2
+EXE_TARGETS = delaunay_2_test delaunay_2_test2 delaunay_d_test2
 EXE_FILES = $(foreach target, $(EXE_TARGETS), $(BUILD_DIR)/$(target)$(EXE_PREFIX))
 
 $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
-all: $(BUILD_DIR) $(EXE_FILES) _delaunay_2_python$(DL_SUFFIX)
+all: $(BUILD_DIR) $(EXE_FILES) _delaunay_2_python$(DL_SUFFIX) _delaunay_d_python$(DL_SUFFIX)
 
 clean:
 ifeq ($(COMPILER), gcc)
 	rm -rf $(BUILD_DIR)
+	rm _delaunay_2_python$(DL_SUFFIX) _delaunay_d_python$(DL_SUFFIX)
 else
 	rmdir /s /q $(BUILD_DIR)
+	del _delaunay_2_python$(DL_SUFFIX) _delaunay_d_python$(DL_SUFFIX)
 endif
 

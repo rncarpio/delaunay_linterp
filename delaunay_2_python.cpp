@@ -181,15 +181,16 @@ public:
   : Delaunay_incremental_interp_2()
   {
     if (fn != bpl::object()) {
-	  super::m_fn = [=](double x1, double x2)->double { return this->call_python_fn(x1, x2); };  
+	  super::m_fn = [=](int n_args, double *args_begin)->double { return this->call_python_fn(2, args_begin); };  
       m_fn_obj = fn;	  
     }
   }
     
-  double call_python_fn(double x1, double x2) const {
+  double call_python_fn(int n_args, double *args_begin) const {
     bpl::list args;    
-    args.append(x1);
-	args.append(x2);   
+	for (int i=0; i<n_args; i++) {
+	  args.append(args_begin[i]);
+	}
     bpl::object result = m_fn_obj(args);
     double d_result = bpl::extract<double>(result);
     return d_result;
