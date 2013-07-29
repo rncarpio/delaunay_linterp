@@ -18,8 +18,14 @@ The [CGAL](http://www.cgal.org) computational geometry library is used for the u
 
 Points can be added incrementally. In addition, a function specifying `f(x)` can be passed to the triangulation.  `delaunay_linterp` can adaptively choose where to insert data points, by maintaining a list of approximation errors associated with each simplex of the triangulation. This allows a good approximation of arbitrary functions with few data points, compared to regular grids.
 
-### Coming soon:
-* 3D, nD triangulations
+### dD vs. 2D 
+CGAL has more than one package for constructing a Delaunay triangulation:
+* a [d-dimensional](http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Convex_hull_d/Chapter_main.html) library that uses the lifting transform, then constructs a convex hull in d+1 dimensions. This is very flexible and can handle arbitrary dimensions, but it is much slower than the libraries specifically designed for 2D and 3D.
+* [2D](http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_2/Chapter_main.html) and [3D](http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_3/Chapter_main.html) specific libraries which are much faster.
+
+`delaunay_linterp` provides classes using the dD and 2D libraries (3D coming soon...). 
+* for dD, use the `delaunay_d_interp` class. Caveats: currently, it cannot handle interpolation queries outside the convex hull of the inserted points
+* for 2D, use the `delaunay_2_interp` class
 
 ### C++ interface
 Here is an example in C++:
