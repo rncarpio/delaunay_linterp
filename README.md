@@ -24,7 +24,7 @@ CGAL has more than one package for constructing a Delaunay triangulation:
 * [2D](http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_2/Chapter_main.html) and [3D](http://www.cgal.org/Manual/latest/doc_html/cgal_manual/Triangulation_3/Chapter_main.html) specific libraries which are much faster.
 
 `delaunay_linterp` provides classes using the dD and 2D libraries (3D coming soon...). 
-* for dD, use the `delaunay_d_interp` class. Caveats: currently, it cannot handle interpolation queries outside the convex hull of the inserted points
+* for dD, use the `delaunay_d_interp` class. Caveats: currently, it cannot handle interpolation queries outside the convex hull of the inserted points. It uses modified versions of CGAL headers, located in the `CGAL_modified` directory
 * for 2D, use the `delaunay_2_interp` class
 
 ### C++ interface

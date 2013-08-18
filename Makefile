@@ -7,6 +7,8 @@ else
 	COMPILER = gcc
 endif
 
+VPATH = src
+
 #############################
 # directories, includes, libs
 #############################
@@ -39,7 +41,7 @@ else
 endif
 
 PYUBLAS_INC_DIR = .
-INCLUDES = -I$(BOOST_INC_DIR) -I$(PYUBLAS_INC_DIR) \
+INCLUDES = -Isrc -I$(BOOST_INC_DIR) -I$(PYUBLAS_INC_DIR) \
 	$(foreach dir, $(PYTHON_INC_DIRS) $(CGAL_DIR) $(EIGEN_DIR) $(GMP_DIR) $(MPFR_DIR), -I$(dir))
 BOOST_LIB_DIR = $(BOOST_DIR)/lib
 ifeq ($(COMPILER), gcc)	
